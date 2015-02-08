@@ -1,0 +1,31 @@
+{
+  "name": "hx2dts",
+  "version": "0.1.0",
+  "description": "Generate d.ts Typescript definition files from Haxe files",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jeremyfa/node-hx2dts.git"
+  },
+  "keywords": [
+    "haxe",
+    "typescript"
+  ],
+  "dependencies": {
+        "commander": "^2.5.0",
+        "fs-extra": "^0.12.0",
+        "glob": "^4.0.6",
+        "lodash": "^2.4.1",
+        "persist": "^0.2.7",
+        "ts2json": "^1.0.5"
+  },
+  "author": "Jeremy Faivre <contact@jeremyfa.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/jeremyfa/node-hx2dts/issues"
+  },
+  "homepage": "https://github.com/jeremyfa/node-hx2dts"
+}
