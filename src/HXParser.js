@@ -1,4 +1,9 @@
 
+/**
+ * HXParser.js
+ * created by Jeremy Faivre on 06/02/15.
+ */
+
 var _ = require('lodash');
 
 var REGEX_QUOTED_STRING = new RegExp('^(?:"(?:[^"\\\\]*(?:\\\\.[^"\\\\]*)*)"|\'(?:[^\']*(?:\'\'[^\']*)*)\')', '');
@@ -31,11 +36,18 @@ var HXParser = function(input, moduleName) {
         entries: []
     };
     this.braces = 0;
+};
 
-    this.cleanupHaxe();
-    this.parseHaxe();
 
-    console.log(JSON.stringify(this.info, null, 4));
+HXParser.prototype.getInfo = function() {
+    if (!this.didCleanupAndParseHaxe) {
+        this.cleanupHaxe();
+        this.parseHaxe();
+
+        this.didCleanupAndParseHaxe = true;
+    }
+
+    return _.cloneDeep(this.info);
 };
 
 
