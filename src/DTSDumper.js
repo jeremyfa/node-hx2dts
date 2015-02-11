@@ -277,7 +277,21 @@ DTSDumper.prototype.getType = function(rawType) {
 
 
 DTSDumper.prototype.convertCallbacks = function(input) {
-    return input;
+    return input.replace(/([^\-]+\->[^\-]+(\->[^\-]+)*)/, function(match, contents, offset, s) {
+        var elements = contents.split('->');
+        if (elements.length == 2) {
+            if (elements[0] == 'void') {
+                return '()=>' + elements[1];
+            }
+        } else {
+            var args = [];
+            for (var i = 0, len = elements.length; i < len - 1; i++) {
+                args.push('arg' + (i + 1) + ':' + elements[i]);
+            }
+            return '(' + args.join(', ') + ')=>' + elements[elements.length - 1];
+        }
+        return contents;
+    });
 };
 
 
