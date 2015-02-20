@@ -113,8 +113,18 @@ DTSDumper.prototype.isEntryWithModuleName = function(entry) {
 DTSDumper.prototype.dumpEntry = function(entry) {
     if (!entry.isPrivate) {
         var _this = this;
+
+        if (entry.comments != null) {
+            this.writeIndentedLine('/**');
+            entry.comments.split("\n").forEach(function(comment) {
+                _this.writeIndentedLine(' * ' + comment);
+            });
+            this.writeIndentedLine(' */');
+        }
+
         if (entry.propertyName != null) {
             this.writeIndentedLine((entry.isStatic ? 'static ' : '') + entry.propertyName + ': ' + this.getType(entry.propertyType) + ';');
+            this.writeLineBreak();
         }
         else if (entry.methodName != null) {
             if (entry.methodName == 'new') {
@@ -122,9 +132,11 @@ DTSDumper.prototype.dumpEntry = function(entry) {
             } else {
                 this.writeIndentedLine((entry.isStatic ? 'static ' : '') + entry.methodName + '(' + this.getArguments(entry.arguments) + '): ' + this.getType(entry.returnType) + ';');
             }
+            this.writeLineBreak();
         }
         else if (entry.className != null) {
             this.writeIndentedLine('export class ' + entry.className + this.getHeritageClauses(entry) + ' {');
+            this.writeLineBreak();
             this.indent++;
 
             entry.entries.forEach(function (entry) {
@@ -137,6 +149,7 @@ DTSDumper.prototype.dumpEntry = function(entry) {
         }
         else if (entry.interfaceName != null) {
             this.writeIndentedLine('export interface ' + entry.interfaceName + this.getHeritageClauses(entry) + ' {');
+            this.writeLineBreak();
             this.indent++;
 
             entry.entries.forEach(function (entry) {
@@ -153,6 +166,7 @@ DTSDumper.prototype.dumpEntry = function(entry) {
                 this.writeLineBreak();
             } else {
                 this.writeIndentedLine('export interface ' + entry.typedefName + ' {');
+                this.writeLineBreak();
                 this.indent++;
 
                 entry.entries.forEach(function (entry) {
@@ -166,6 +180,7 @@ DTSDumper.prototype.dumpEntry = function(entry) {
         }
         else if (entry.enumName != null) {
             this.writeIndentedLine('export enum ' + entry.enumName + ' {');
+            this.writeLineBreak();
             this.indent++;
 
             var lastI = 0;
@@ -180,6 +195,7 @@ DTSDumper.prototype.dumpEntry = function(entry) {
             entry.enumValues.forEach(function(value, i) {
                 if (value.valueArguments == null) {
                     _this.writeIndentedLine(value.valueName+(i < lastI ? ',' : ''));
+                    _this.writeLineBreak();
                 }
             });
 
@@ -189,6 +205,7 @@ DTSDumper.prototype.dumpEntry = function(entry) {
 
             if (hasEntriesWithArguments) {
                 this.writeIndentedLine('declare module ' + entry.enumName + ' {');
+                this.writeLineBreak();
                 this.indent++;
 
                 entry.enumValues.forEach(function(value, i) {

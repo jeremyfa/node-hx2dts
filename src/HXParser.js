@@ -55,6 +55,8 @@ HXParser.prototype.cleanupHaxe = function() {
     var i = 0;
     var input = this.input;
     var newInput = '';
+    var currentRawComment = null;
+    var rawComments = [];
 
     while (i < input.length) {
         var hx = input.substring(i);
@@ -62,6 +64,14 @@ HXParser.prototype.cleanupHaxe = function() {
         if (this.isInSingleLineComment) {
             if (hx.charAt(0) == "\n") {
                 this.isInSingleLineComment = false;
+                rawComments.push({
+                    text: currentRawComment,
+                    multiline: false,
+                    line: newInput.split("\n").length
+                });
+                currentRawComment = null;
+            } else {
+                currentRawComment += hx.charAt(0);
             }
             newInput += ' ';
             i++;
@@ -69,9 +79,16 @@ HXParser.prototype.cleanupHaxe = function() {
         else if (this.isInMultiLineComment) {
             if (hx.substr(0, 2) == "*/") {
                 this.isInMultiLineComment = false;
+                rawComments.push({
+                    text: currentRawComment,
+                    multiline: true,
+                    line: newInput.split("\n").length
+                });
+                currentRawComment = null;
                 newInput += '  ';
                 i += 2;
             } else {
+                currentRawComment += hx.charAt(0);
                 if (hx.charAt(0) == "\n") {
                     newInput += "\n";
                 } else {
@@ -82,11 +99,13 @@ HXParser.prototype.cleanupHaxe = function() {
         }
         else if (hx.substr(0, 2) == '//') {
             this.isInSingleLineComment = true;
+            currentRawComment = '';
             newInput += '  ';
             i += 2;
         }
         else if (hx.substr(0, 2) == '/*') {
             this.isInMultiLineComment = true;
+            currentRawComment = '';
             newInput += '  ';
             i += 2;
         }
@@ -99,6 +118,43 @@ HXParser.prototype.cleanupHaxe = function() {
     this.input = newInput;
     this.isInMultiLineComment = false;
     this.isInSingleLineComment = false;
+
+    var _this = this;
+    rawComments.forEach(function(rawComment, i) {
+        rawComments[i].text = _this.parseRawComment(rawComment.text);
+    });
+    this.comments = rawComments;
+};
+
+
+HXParser.prototype.parseRawComment = function(rawComment) {
+    var lines = rawComment.split("\t").join("    ").split("\r").join("");
+    lines = lines.substring(1, lines.length-1).split("\n");
+    var lowestIndent = 99999;
+    for (var i = 0, len = lines.length; i < len; i++) {
+        var line = lines[i];
+        var cleanedLine = line.replace(/^([\s\*]+)/, '');
+        if (cleanedLine.trim() != '') {
+            var lenBefore = line.length;
+            var lenAfter = cleanedLine.length;
+            if (lenBefore - lenAfter < lowestIndent) {
+                lowestIndent = lenBefore - lenAfter;
+            }
+        }
+    }
+
+    var result = [];
+    for (i = 0, len = lines.length; i < len; i++) {
+        var line = lines[i];
+        line = line.substring(lowestIndent);
+        if (result.length != 0 || line.trim() != '') {
+            result.push(line);
+        }
+    }
+    result = result.join("\n");
+    result = result.replace(/\s+$/, '');
+
+    return result;
 };
 
 
@@ -143,6 +199,12 @@ HXParser.prototype.parseHaxe = function() {
                 interfaceName:  matches[2],
                 entries:        []
             };
+
+            // Comments?
+            var comments = this.getCommentsBeforeLine(input.substring(0, i).split("\n").length);
+            if (comments.trim().length > 0) {
+                interfaceInfo.comments = comments;
+            }
 
             // Is it private?
             if (matches[1] != null && matches[1].trim() == 'private') {
@@ -191,6 +253,12 @@ HXParser.prototype.parseHaxe = function() {
                 entries:        []
             };
 
+            // Comments?
+            var comments = this.getCommentsBeforeLine(input.substring(0, i).split("\n").length);
+            if (comments.trim().length > 0) {
+                typedefInfo.comments = comments;
+            }
+
             // Is it private?
             if (matches[1] != null && matches[1].trim() == 'private') {
                 typedefInfo.isPrivate = true;
@@ -232,6 +300,12 @@ HXParser.prototype.parseHaxe = function() {
                 className:  matches[3],
                 entries:    []
             };
+
+            // Comments?
+            var comments = this.getCommentsBeforeLine(input.substring(0, i).split("\n").length);
+            if (comments.trim().length > 0) {
+                classInfo.comments = comments;
+            }
 
             // Is it extern?
             if (matches[1] != null && matches[1].trim() == 'extern') {
@@ -290,6 +364,12 @@ HXParser.prototype.parseHaxe = function() {
                 arguments:  []
             };
 
+            // Comments?
+            var comments = this.getCommentsBeforeLine(input.substring(0, i).split("\n").length);
+            if (comments.trim().length > 0) {
+                methodInfo.comments = comments;
+            }
+
             // Does it have modifiers?
             if (matches[1] != null) {
                 // Is it static?
@@ -339,6 +419,12 @@ HXParser.prototype.parseHaxe = function() {
                 propertyName:   matches[3]
             };
 
+            // Comments?
+            var comments = this.getCommentsBeforeLine(input.substring(0, i).split("\n").length);
+            if (comments.trim().length > 0) {
+                propertyInfo.comments = comments;
+            }
+
             // Does it have modifiers?
             if (matches[1] != null) {
                 // Is it static?
@@ -383,6 +469,12 @@ HXParser.prototype.parseHaxe = function() {
                 enumName:   matches[2],
                 enumValues: []
             };
+
+            // Comments?
+            var comments = this.getCommentsBeforeLine(input.substring(0, i).split("\n").length);
+            if (comments.trim().length > 0) {
+                enumInfo.comments = comments;
+            }
 
             // Is it private?
             if (matches[1] != null && matches[1].indexOf('private') != -1) {
@@ -463,6 +555,19 @@ HXParser.prototype.parseHaxe = function() {
             i++;
         }
     }
+};
+
+
+HXParser.prototype.getCommentsBeforeLine = function(lineNumber) {
+    var lines = [];
+    while (this.comments.length > 0 && this.comments[0].line < lineNumber) {
+        var comment = this.comments[0];
+        this.comments.shift();
+        comment.text.split("\n").forEach(function(line) {
+            lines.push(line);
+        });
+    }
+    return lines.join("\n");
 };
 
 
