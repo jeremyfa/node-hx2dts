@@ -28,7 +28,7 @@ DTSDumper.prototype.dumpFromInput = function() {
     this.computeTypeReplacements();
 
     if (this.input.package != null) {
-        this.writeIndentedLine('module ' + this.input.package + ' {');
+        this.writeIndentedLine('declare module ' + this.input.package + ' {');
         this.writeLineBreak();
         this.indent++;
     }
@@ -42,21 +42,31 @@ DTSDumper.prototype.dumpFromInput = function() {
         }
     });
 
-    // Dump other elements
-    //
-    this.writeIndentedLine('module ' + this.input.moduleName + ' {');
-    this.writeLineBreak();
-    this.indent++;
-
+    // Check if there are other elements to dump
+    var hasMoreElements = false;
     this.input.entries.forEach(function(entry) {
         if (!_this.isEntryWithModuleName(entry)) {
-            _this.dumpEntry(entry);
+            hasMoreElements = true;
         }
     });
 
-    this.indent--;
-    this.writeIndentedLine('}');
-    this.writeLineBreak();
+    if (hasMoreElements) {
+        // Dump other elements
+        //
+        this.writeIndentedLine('module ' + this.input.moduleName + ' {');
+        this.writeLineBreak();
+        this.indent++;
+
+        this.input.entries.forEach(function(entry) {
+            if (!_this.isEntryWithModuleName(entry)) {
+                _this.dumpEntry(entry);
+            }
+        });
+
+        this.indent--;
+        this.writeIndentedLine('}');
+        this.writeLineBreak();
+    }
 
     if (this.input.package != null) {
         this.indent--;
@@ -72,6 +82,7 @@ DTSDumper.prototype.computeTypeReplacements = function() {
     // Default replacements
     this.typeReplacements['String'] = 'string';
     this.typeReplacements['Int'] = 'integer';
+    this.typeReplacements['UInt'] = 'integer';
     this.typeReplacements['Float'] = 'number';
     this.typeReplacements['Bool'] = 'boolean';
     this.typeReplacements['Array<Dynamic>'] = 'Array<any>';
@@ -106,10 +117,14 @@ DTSDumper.prototype.dumpEntry = function(entry) {
             this.writeIndentedLine((entry.isStatic ? 'static ' : '') + entry.propertyName + ': ' + this.getType(entry.propertyType) + ';');
         }
         else if (entry.methodName != null) {
-            this.writeIndentedLine((entry.isStatic ? 'static ' : '') + entry.methodName + '(' + this.getArguments(entry.arguments) + '): ' + this.getType(entry.returnType) + ';');
+            if (entry.methodName == 'new') {
+                this.writeIndentedLine((entry.isStatic ? 'static ' : '') + 'constructor(' + this.getArguments(entry.arguments) + ');');
+            } else {
+                this.writeIndentedLine((entry.isStatic ? 'static ' : '') + entry.methodName + '(' + this.getArguments(entry.arguments) + '): ' + this.getType(entry.returnType) + ';');
+            }
         }
         else if (entry.className != null) {
-            this.writeIndentedLine('class ' + entry.className + this.getHeritageClauses(entry) + ' {');
+            this.writeIndentedLine('export class ' + entry.className + this.getHeritageClauses(entry) + ' {');
             this.indent++;
 
             entry.entries.forEach(function (entry) {
@@ -121,7 +136,7 @@ DTSDumper.prototype.dumpEntry = function(entry) {
             this.writeLineBreak();
         }
         else if (entry.interfaceName != null) {
-            this.writeIndentedLine('interface ' + entry.interfaceName + this.getHeritageClauses(entry) + ' {');
+            this.writeIndentedLine('export interface ' + entry.interfaceName + this.getHeritageClauses(entry) + ' {');
             this.indent++;
 
             entry.entries.forEach(function (entry) {
@@ -134,10 +149,10 @@ DTSDumper.prototype.dumpEntry = function(entry) {
         }
         else if (entry.typedefName != null) {
             if (entry.typedefType != null) {
-                this.writeIndentedLine('interface ' + entry.typedefName + ' extends ' + entry.typedefType + ' {}');
+                this.writeIndentedLine('export interface ' + entry.typedefName + ' extends ' + entry.typedefType + ' {}');
                 this.writeLineBreak();
             } else {
-                this.writeIndentedLine('interface ' + entry.typedefName + ' {');
+                this.writeIndentedLine('export interface ' + entry.typedefName + ' {');
                 this.indent++;
 
                 entry.entries.forEach(function (entry) {
@@ -150,7 +165,7 @@ DTSDumper.prototype.dumpEntry = function(entry) {
             }
         }
         else if (entry.enumName != null) {
-            this.writeIndentedLine('enum ' + entry.enumName + ' {');
+            this.writeIndentedLine('export enum ' + entry.enumName + ' {');
             this.indent++;
 
             var lastI = 0;
@@ -173,7 +188,7 @@ DTSDumper.prototype.dumpEntry = function(entry) {
             this.writeLineBreak();
 
             if (hasEntriesWithArguments) {
-                this.writeIndentedLine('module ' + entry.enumName + ' {');
+                this.writeIndentedLine('declare module ' + entry.enumName + ' {');
                 this.indent++;
 
                 entry.enumValues.forEach(function(value, i) {
@@ -228,7 +243,13 @@ DTSDumper.prototype.getHeritageClauses = function(entry) {
 
 
 DTSDumper.prototype.getType = function(rawType) {
+
     if (rawType == null) return 'any';
+
+    if (rawType.substring(0,5) == 'Null<' && rawType.charAt(rawType.length - 1) == '>') {
+        rawType = rawType.substring(5, rawType.length - 1);
+    }
+
     if (this.typeReplacements[rawType] != null) {
         return this.typeReplacements[rawType];
     }
@@ -282,6 +303,9 @@ DTSDumper.prototype.convertCallbacks = function(input) {
         if (elements.length == 2) {
             if (elements[0] == 'void') {
                 return '()=>' + elements[1];
+            }
+            else {
+                return '(' + elements[0] + ')=>' + elements[1]
             }
         } else {
             var args = [];

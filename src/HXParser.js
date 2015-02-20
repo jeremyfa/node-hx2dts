@@ -135,7 +135,7 @@ HXParser.prototype.parseHaxe = function() {
             i += matchedHx.length;
         }
         // Interface
-        else if (matches = hx.match(/^(private\s+)?interface\s+([a-zA-Z_][a-zA-Z_0-9]*)((\s+extends\s+(([a-zA-Z_][a-zA-Z_0-9]*\.)*[a-zA-Z_][a-zA-Z_0-9]*))*)(\s*\{|\s*;)/)) {
+        else if (matches = hx.match(/^(private\s+)?interface\s+([a-zA-Z_][a-zA-Z_0-9_<,>\-]*)((\s+extends\s+(([a-zA-Z_][a-zA-Z_0-9]*\.)*[a-zA-Z_][a-zA-Z_0-9]*))*)(\s*\{|\s*;)/)) {
             var matchedHx = matches[0];
 
             // Basic info
@@ -224,29 +224,34 @@ HXParser.prototype.parseHaxe = function() {
             i += matchedHx.length;
         }
         // Class
-        else if (matches = hx.match(/^(private\s+)?class\s+([a-zA-Z_][a-zA-Z_0-9]*)(\s+extends\s+(([a-zA-Z_][a-zA-Z_0-9]*\.)*[a-zA-Z_][a-zA-Z_0-9]*))?((\s+implements\s+(([a-zA-Z_][a-zA-Z_0-9]*\.)*[a-zA-Z_][a-zA-Z_0-9]*))*)(\s*\{|\s*;)/)) {
+        else if (matches = hx.match(/^(extern\s+)?(private\s+)?class\s+([a-zA-Z_][a-zA-Z_0-9_<,>\-]*)(\s+extends\s+(([a-zA-Z_][a-zA-Z_0-9]*\.)*[a-zA-Z_][a-zA-Z_0-9]*))?((\s+implements\s+(([a-zA-Z_][a-zA-Z_0-9]*\.)*[a-zA-Z_][a-zA-Z_0-9]*))*)(\s*\{|\s*;)/)) {
             var matchedHx = matches[0];
 
             // Basic info
             var classInfo = {
-                className:  matches[2],
+                className:  matches[3],
                 entries:    []
             };
 
+            // Is it extern?
+            if (matches[1] != null && matches[1].trim() == 'extern') {
+                classInfo.isExtern = true;
+            }
+
             // Is it private?
-            if (matches[1] != null && matches[1].trim() == 'private') {
+            if (matches[2] != null && matches[2].trim() == 'private') {
                 classInfo.isPrivate = true;
             }
 
             // Extends another class?
-            if (matches[4] != null && matches[4].length > 0) {
-                classInfo.extendsClass = matches[4];
+            if (matches[5] != null && matches[5].length > 0) {
+                classInfo.extendsClass = matches[5];
             }
 
             // Implements interfaces?
-            if (matches[6] != null && matches[6].indexOf('implements') != -1) {
+            if (matches[7] != null && matches[7].indexOf('implements') != -1) {
                 classInfo.implementsInterfaces = [];
-                matches[6].split(/\simplements\s/).forEach(function(interfaceName) {
+                matches[7].split(/\simplements\s/).forEach(function(interfaceName) {
                     if (interfaceName.trim().length > 0) {
                         classInfo.implementsInterfaces.push(interfaceName.trim());
                     }
@@ -254,7 +259,7 @@ HXParser.prototype.parseHaxe = function() {
             }
 
             // Open brace?
-            if (matches[10].indexOf('{') != -1) {
+            if (matches[11].indexOf('{') != -1) {
                 this.braces++;
             }
 
@@ -276,7 +281,7 @@ HXParser.prototype.parseHaxe = function() {
             i += matchedHx.length;
         }
         // Method
-        else if ((this.currentClass != null || this.currentInterface != null || this.currentTypedef != null) && (matches = hx.match(/^((?:(private|static|public|override)\s+)*)function\s+([a-zA-Z_][a-zA-Z_0-9]*)\s*\(([^\)]*)\)(\s*:\s*([a-zA-Z_][a-zA-Z0-9_<,>\-]*))?(\s*\{|\s*;)/))) {
+        else if ((this.currentClass != null || this.currentInterface != null || this.currentTypedef != null) && (matches = hx.match(/^((?:(private|static|public|override|inline|virtual|(?:@:[^\s]+))\s+)*)?function\s+([a-zA-Z_][a-zA-Z_0-9]*)\s*\(([^\)]*)\)(\s*:\s*([a-zA-Z_][a-zA-Z0-9_<,>\-]*))?(\s*\{|\s*;)/))) {
             var matchedHx = matches[0];
 
             // Basic info
@@ -292,7 +297,7 @@ HXParser.prototype.parseHaxe = function() {
                     methodInfo.isStatic = true;
                 }
                 // Is it private or public?
-                if (matches[1].indexOf('public') == -1 && this.currentTypedef == null) {
+                if (matches[1].indexOf('public') == -1 && this.currentTypedef == null && (this.currentClass == null || !this.classesByName[this.currentClass].isExtern)) {
                     methodInfo.isPrivate = true;
                 }
             }
@@ -326,7 +331,7 @@ HXParser.prototype.parseHaxe = function() {
             i += matchedHx.length;
         }
         // Property
-        else if ((this.currentClass != null || this.currentInterface != null || this.currentTypedef != null) && (matches = hx.match(/^((?:(private|static|public|override)\s+)*)var\s+([a-zA-Z_][a-zA-Z_0-9]*)\s*(\(([^\)]*)\))?(\s*:\s*([a-zA-Z_][a-zA-Z0-9_<,>\-]*))?(\s*=\s*((?:"(?:[^"\\]*(?:\\.[^"\\]*)*)"|'(?:[^']*(?:''[^']*)*)')|(?:[^;]+)))?(\s*;)/))) {
+        else if ((this.currentClass != null || this.currentInterface != null || this.currentTypedef != null) && (matches = hx.match(/^((?:(private|static|public|override|virtual|inline)\s+)*)?var\s+([a-zA-Z_][a-zA-Z_0-9]*)\s*(\(([^\)]*)\))?(\s*:\s*([a-zA-Z_][a-zA-Z0-9_<,>\-]*))?(\s*=\s*((?:"(?:[^"\\]*(?:\\.[^"\\]*)*)"|'(?:[^']*(?:''[^']*)*)')|(?:[^;]+)))?(\s*;)/))) {
             var matchedHx = matches[0];
 
             // Basic info
@@ -341,7 +346,7 @@ HXParser.prototype.parseHaxe = function() {
                     propertyInfo.isStatic = true;
                 }
                 // Is it private or public?
-                if (matches[1].indexOf('public') == -1 && this.currentTypedef == null) {
+                if (matches[1].indexOf('public') == -1 && this.currentTypedef == null && (this.currentClass == null || !this.classesByName[this.currentClass].isExtern)) {
                     propertyInfo.isPrivate = true;
                 }
             }
@@ -465,7 +470,7 @@ HXParser.prototype.parseArguments = function(input) {
     var i = 0;
     var matches = null;
     var arguments = [];
-    input = input+',';
+    input = input.replace(/\s+/g, '')+',';
 
     while (i < input.length) {
         var hx = input.substring(i);
