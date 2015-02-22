@@ -123,19 +123,19 @@ DTSDumper.prototype.dumpEntry = function(entry) {
         }
 
         if (entry.propertyName != null) {
-            this.writeIndentedLine((entry.isStatic ? 'static ' : '') + entry.propertyName + ': ' + this.getType(entry.propertyType) + ';');
+            this.writeIndentedLine((entry.isStatic ? 'static ' : '') + this.getComposedIdentifierName(entry.propertyName) + ': ' + this.getType(entry.propertyType) + ';');
             this.writeLineBreak();
         }
         else if (entry.methodName != null) {
             if (entry.methodName == 'new') {
                 this.writeIndentedLine((entry.isStatic ? 'static ' : '') + 'constructor(' + this.getArguments(entry.arguments) + ');');
             } else {
-                this.writeIndentedLine((entry.isStatic ? 'static ' : '') + entry.methodName + '(' + this.getArguments(entry.arguments) + '): ' + this.getType(entry.returnType) + ';');
+                this.writeIndentedLine((entry.isStatic ? 'static ' : '') + this.getComposedIdentifierName(entry.methodName) + '(' + this.getArguments(entry.arguments) + '): ' + this.getType(entry.returnType) + ';');
             }
             this.writeLineBreak();
         }
         else if (entry.className != null) {
-            this.writeIndentedLine('export class ' + entry.className + this.getHeritageClauses(entry) + ' {');
+            this.writeIndentedLine('export class ' + this.getComposedIdentifierName(entry.className) + this.getHeritageClauses(entry) + ' {');
             this.writeLineBreak();
             this.indent++;
 
@@ -148,7 +148,7 @@ DTSDumper.prototype.dumpEntry = function(entry) {
             this.writeLineBreak();
         }
         else if (entry.interfaceName != null) {
-            this.writeIndentedLine('export interface ' + entry.interfaceName + this.getHeritageClauses(entry) + ' {');
+            this.writeIndentedLine('export interface ' + this.getComposedIdentifierName(entry.interfaceName) + this.getHeritageClauses(entry) + ' {');
             this.writeLineBreak();
             this.indent++;
 
@@ -162,10 +162,10 @@ DTSDumper.prototype.dumpEntry = function(entry) {
         }
         else if (entry.typedefName != null) {
             if (entry.typedefType != null) {
-                this.writeIndentedLine('export interface ' + entry.typedefName + ' extends ' + entry.typedefType + ' {}');
+                this.writeIndentedLine('export interface ' + this.getComposedIdentifierName(entry.typedefName) + ' extends ' + this.getComposedIdentifierName(entry.typedefType) + ' {}');
                 this.writeLineBreak();
             } else {
-                this.writeIndentedLine('export interface ' + entry.typedefName + ' {');
+                this.writeIndentedLine('export interface ' + this.getComposedIdentifierName(entry.typedefName) + ' {');
                 this.writeLineBreak();
                 this.indent++;
 
@@ -179,7 +179,7 @@ DTSDumper.prototype.dumpEntry = function(entry) {
             }
         }
         else if (entry.enumName != null) {
-            this.writeIndentedLine('export enum ' + entry.enumName + ' {');
+            this.writeIndentedLine('export enum ' + this.getComposedIdentifierName(entry.enumName) + ' {');
             this.writeLineBreak();
             this.indent++;
 
@@ -204,13 +204,13 @@ DTSDumper.prototype.dumpEntry = function(entry) {
             this.writeLineBreak();
 
             if (hasEntriesWithArguments) {
-                this.writeIndentedLine('declare module ' + entry.enumName + ' {');
+                this.writeIndentedLine('declare module ' + this.getComposedIdentifierName(entry.enumName) + ' {');
                 this.writeLineBreak();
                 this.indent++;
 
                 entry.enumValues.forEach(function(value, i) {
                     if (value.valueArguments != null) {
-                        _this.writeIndentedLine('static ' + value.valueName + '(' + _this.getArguments(value.valueArguments) + '): ' + entry.enumName + ';');
+                        _this.writeIndentedLine('static ' + _this.getComposedIdentifierName(value.valueName) + '(' + _this.getArguments(value.valueArguments) + '): ' + _this.getComposedIdentifierName(entry.enumName) + ';');
                     }
                 });
 
@@ -220,6 +220,17 @@ DTSDumper.prototype.dumpEntry = function(entry) {
             }
         }
     }
+};
+
+
+DTSDumper.prototype.getComposedIdentifierName = function(input) {
+    if (input.indexOf('<') != -1) {
+        var _this = this;
+        input = input.replace(/<(.*)>/, function(match, contents, offset, s) {
+            return '<' + _this.getType(contents) + '>';
+        });
+    }
+    return input;
 };
 
 
@@ -262,6 +273,10 @@ DTSDumper.prototype.getHeritageClauses = function(entry) {
 DTSDumper.prototype.getType = function(rawType) {
 
     if (rawType == null) return 'any';
+
+    if (rawType.indexOf(':') != -1) {
+        rawType = rawType.substring(0, rawType.indexOf(':'));
+    }
 
     if (rawType.substring(0,5) == 'Null<' && rawType.charAt(rawType.length - 1) == '>') {
         rawType = rawType.substring(5, rawType.length - 1);
