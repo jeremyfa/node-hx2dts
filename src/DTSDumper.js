@@ -111,7 +111,7 @@ DTSDumper.prototype.isEntryWithModuleName = function(entry) {
 
 
 DTSDumper.prototype.dumpEntry = function(entry) {
-    if (!entry.isPrivate) {
+    if (!entry.isPrivate || !(entry.methodName || entry.propertyName)) {
         var _this = this;
 
         if (entry.comments != null) {
