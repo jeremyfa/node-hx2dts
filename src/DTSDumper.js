@@ -102,10 +102,10 @@ DTSDumper.prototype.computeTypeReplacements = function() {
 
 DTSDumper.prototype.isEntryWithModuleName = function(entry) {
     var moduleName = this.input.moduleName;
-    if (moduleName == entry.className) return true;
-    if (moduleName == entry.interfaceName) return true;
-    if (moduleName == entry.typedefName) return true;
-    if (moduleName == entry.enumName) return true;
+    if (entry.className != null && moduleName == entry.className.split('<')[0]) return true;
+    if (entry.interfaceName != null && moduleName == entry.interfaceName.split('<')[0]) return true;
+    if (entry.typedefName != null && moduleName == entry.typedefName.split('<')[0]) return true;
+    if (entry.enumName != null && moduleName == entry.enumName.split('<')[0]) return true;
     return false;
 };
 
