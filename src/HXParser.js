@@ -130,6 +130,10 @@ HXParser.prototype.cleanupHaxe = function() {
             }
             i++;
         }
+        else if ((hx.charAt(0) == '\'' || hx.charAt(0) == '"') && ((REGEX_QUOTED_STRING.lastIndex = -1) && (matches = hx.match(REGEX_QUOTED_STRING)))) {
+            newInput += matches[0];
+            i += matches[0].length;
+        }
         else {
             newInput += hx.charAt(0);
             i++;
