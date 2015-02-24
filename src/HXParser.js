@@ -380,7 +380,7 @@ HXParser.prototype.parseHaxe = function() {
             i += matchedHx.length;
         }
         // Method
-        else if (this.currentMethod == null && (this.currentClass != null || this.currentInterface != null || this.currentTypedef != null) && (matches = hx.match(/^((?:(private|static|public|override|inline|virtual|(?:@:[^\s]+))\s+)*)?function\s+([a-zA-Z_][a-zA-Z0-9_<,>:\-]*)\s*\(([^\)]*)\)(\s*:\s*([a-zA-Z_][a-zA-Z0-9_<,>\-]*))?(\s*\{|\s*;)/))) {
+        else if (this.currentMethod == null && (this.currentClass != null || this.currentInterface != null || this.currentTypedef != null) && (matches = hx.match(/^((?:(private|static|public|override|inline|virtual|(?:@:[^\s]+))\s+)*)?function\s+([a-zA-Z_][a-zA-Z0-9_<,>:\-]*)\s*\(([^\)]*)\)(\s*:\s*((?:[a-zA-Z_][a-zA-Z0-9_]*\.)*[a-zA-Z_][a-zA-Z0-9_<,>\-]*))?(\s*\{|\s*;)/))) {
             var matchedHx = matches[0];
 
             // Basic info
@@ -438,7 +438,7 @@ HXParser.prototype.parseHaxe = function() {
             i += matchedHx.length;
         }
         // Property
-        else if (this.currentMethod == null && (this.currentClass != null || this.currentInterface != null || this.currentTypedef != null) && (matches = hx.match(/^((?:(private|static|public|override|virtual|inline)\s+)*)?var\s+([a-zA-Z_][a-zA-Z_0-9]*)\s*(\(([^\)]*)\))?(\s*:\s*([a-zA-Z_][a-zA-Z0-9_<,>\-]*))?(\s*=\s*((?:"(?:[^"\\]*(?:\\.[^"\\]*)*)"|'(?:[^']*(?:''[^']*)*)')|(?:[^;]+)))?(\s*;)/))) {
+        else if (this.currentMethod == null && (this.currentClass != null || this.currentInterface != null || this.currentTypedef != null) && (matches = hx.match(/^((?:(private|static|public|override|virtual|inline)\s+)*)?var\s+([a-zA-Z_][a-zA-Z_0-9]*)\s*(\(([^\)]*)\))?(\s*:\s*((?:[a-zA-Z_][a-zA-Z0-9_]*\.)*[a-zA-Z_][a-zA-Z0-9_<,>\-]*))?(\s*=\s*((?:"(?:[^"\\]*(?:\\.[^"\\]*)*)"|'(?:[^']*(?:''[^']*)*)')|(?:[^;]+)))?(\s*;)/))) {
             var matchedHx = matches[0];
 
             // Basic info
