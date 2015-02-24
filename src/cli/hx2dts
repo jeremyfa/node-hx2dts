@@ -10,7 +10,7 @@ var utils = require('../utils');
 //
 cli.version(require('../../package.json').version);
 cli.usage('<file>');
-cli.option('-h, --haxe [haxe]', 'Directory of already haxe files');
+cli.option('-h, --haxe [haxe]', 'Directory of existing haxe files');
 cli.option('-d, --destination [destination]', 'Destination directory where final d.ts files will be put');
 cli.parse(process.argv);
 
