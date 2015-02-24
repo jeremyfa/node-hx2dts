@@ -253,13 +253,17 @@ HXParser.prototype.parseHaxe = function() {
 
             // Add result only if there is no existing entry
             var newEntries = [];
+            var previousEntry = null;
             this.info.entries.forEach(function(existingEntry) {
-                if (existingEntry.interfaceName != interfaceInfo.interfaceName) {
-                    newEntries.push(existingEntry);
+                if (existingEntry.interfaceName == interfaceInfo.interfaceName) {
+                    previousEntry = existingEntry;
                 }
+                newEntries.push(existingEntry);
             });
-            newEntries.push(interfaceInfo);
-            this.interfacesByName[interfaceInfo.interfaceName] = interfaceInfo;
+            if (previousEntry == null) {
+                newEntries.push(interfaceInfo);
+                this.interfacesByName[interfaceInfo.interfaceName] = interfaceInfo;
+            }
             this.info.entries = newEntries;
 
             // Set current interface
@@ -301,13 +305,17 @@ HXParser.prototype.parseHaxe = function() {
 
             // Add result only if there is no existing entry
             var newEntries = [];
+            var previousEntry = null;
             this.info.entries.forEach(function(existingEntry) {
-                if (existingEntry.typedefName != typedefInfo.typedefName) {
-                    newEntries.push(existingEntry);
+                if (existingEntry.typedefName == typedefInfo.typedefName) {
+                    previousEntry = existingEntry;
                 }
+                newEntries.push(existingEntry);
             });
-            newEntries.push(typedefInfo);
-            this.typedefsByName[typedefInfo.typedefName] = typedefInfo;
+            if (previousEntry == null) {
+                newEntries.push(typedefInfo);
+                this.typedefsByName[typedefInfo.typedefName] = typedefInfo;
+            }
             this.info.entries = newEntries;
 
             // Set current class
@@ -364,13 +372,17 @@ HXParser.prototype.parseHaxe = function() {
 
             // Add result only if there is no existing entry
             var newEntries = [];
+            var previousEntry = null;
             this.info.entries.forEach(function(existingEntry) {
-                if (existingEntry.className != classInfo.className) {
-                    newEntries.push(existingEntry);
+                if (existingEntry.className == classInfo.className) {
+                    previousEntry = existingEntry;
                 }
+                newEntries.push(existingEntry);
             });
-            newEntries.push(classInfo);
-            this.classesByName[classInfo.className] = classInfo;
+            if (previousEntry == null) {
+                newEntries.push(classInfo);
+                this.classesByName[classInfo.className] = classInfo;
+            }
             this.info.entries = newEntries;
 
             // Set current class
@@ -412,15 +424,31 @@ HXParser.prototype.parseHaxe = function() {
                 methodInfo.arguments = this.parseArguments(matches[4]);
             }
 
-            // Add method info to current class or interface
+            // Add method info to current class, interface or typedef
+            // Add it only if not existing already
+            var currentEntriesHolder = null;
             if (this.currentClass != null) {
-                this.classesByName[this.currentClass].entries.push(methodInfo);
+                currentEntriesHolder = this.classesByName[this.currentClass];
             }
             else if (this.currentInterface != null) {
-                this.interfacesByName[this.currentInterface].entries.push(methodInfo);
+                currentEntriesHolder = this.interfacesByName[this.currentInterface];
             }
             else if (this.currentTypedef != null) {
-                this.typedefsByName[this.currentTypedef].entries.push(methodInfo);
+                currentEntriesHolder = this.typedefsByName[this.currentTypedef];
+            }
+            if (currentEntriesHolder != null) {
+                var newEntries = [];
+                var previousEntry = null;
+                currentEntriesHolder.entries.forEach(function(existingEntry) {
+                    if (existingEntry.methodName == methodInfo.methodName) {
+                        previousEntry = existingEntry;
+                    }
+                    newEntries.push(existingEntry);
+                });
+                if (previousEntry == null) {
+                    newEntries.push(methodInfo);
+                    currentEntriesHolder.entries = newEntries;
+                }
             }
 
             // Return type
@@ -474,15 +502,31 @@ HXParser.prototype.parseHaxe = function() {
                 propertyInfo.defaultValue = matches[9].replace(/\s*/g, '');
             }
 
-            // Add property info to current class or interface
+            // Add property info to current class, interface or typedef
+            // Add it only if not existing already
+            var currentEntriesHolder = null;
             if (this.currentClass != null) {
-                this.classesByName[this.currentClass].entries.push(propertyInfo);
+                currentEntriesHolder = this.classesByName[this.currentClass];
             }
             else if (this.currentInterface != null) {
-                this.interfacesByName[this.currentInterface].entries.push(propertyInfo);
+                currentEntriesHolder = this.interfacesByName[this.currentInterface];
             }
             else if (this.currentTypedef != null) {
-                this.typedefsByName[this.currentTypedef].entries.push(propertyInfo);
+                currentEntriesHolder = this.typedefsByName[this.currentTypedef];
+            }
+            if (currentEntriesHolder != null) {
+                var newEntries = [];
+                var previousEntry = null;
+                currentEntriesHolder.entries.forEach(function(existingEntry) {
+                    if (existingEntry.propertyName == propertyInfo.propertyName) {
+                        previousEntry = existingEntry;
+                    }
+                    newEntries.push(existingEntry);
+                });
+                if (previousEntry == null) {
+                    newEntries.push(propertyInfo);
+                    currentEntriesHolder.entries = newEntries;
+                }
             }
 
             i += matchedHx.length;
@@ -515,13 +559,17 @@ HXParser.prototype.parseHaxe = function() {
 
             // Add result only if there is no existing entry
             var newEntries = [];
+            var previousEntry = null;
             this.info.entries.forEach(function(existingEntry) {
-                if (existingEntry.enumName != enumInfo.enumName) {
-                    newEntries.push(existingEntry);
+                if (existingEntry.enumName == enumInfo.enumName) {
+                    previousEntry = existingEntry;
                 }
+                newEntries.push(existingEntry);
             });
-            newEntries.push(enumInfo);
-            this.enumsByName[enumInfo.enumName] = enumInfo;
+            if (previousEntry == null) {
+                newEntries.push(enumInfo);
+                this.enumsByName[enumInfo.enumName] = enumInfo;
+            }
             this.info.entries = newEntries;
 
             // Set current enum
