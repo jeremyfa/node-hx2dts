@@ -216,7 +216,7 @@ HXParser.prototype.parseHaxe = function() {
             i += matchedHx.length;
         }
         // Interface
-        else if (this.currentMethod == null && (matches = hx.match(/^(private\s+)?interface\s+([a-zA-Z_][a-zA-Z_0-9_<,>\(\):\-]*)((\s+extends\s+(([a-zA-Z_][a-zA-Z_0-9_<,>\(\):\-]*\.)*[a-zA-Z_][a-zA-Z_0-9_<,>\(\):\-]*))*)(\s*\{|\s*;)/))) {
+        else if (this.currentMethod == null && (matches = hx.match(/^(private\s+)?(?:interface|abstract)\s+([a-zA-Z_][a-zA-Z_0-9_<,>\(\):\-]*)((\s+extends\s+(([a-zA-Z_][a-zA-Z_0-9_<,>\(\):\-]*\.)*[a-zA-Z_][a-zA-Z_0-9_<,>\(\):\-]*))*)(\s*\{|\s*;)/))) {
             var matchedHx = matches[0];
 
             // Basic info
