@@ -216,7 +216,7 @@ HXParser.prototype.parseHaxe = function() {
             i += matchedHx.length;
         }
         // Interface
-        else if (matches = hx.match(/^(private\s+)?interface\s+([a-zA-Z_][a-zA-Z_0-9_<,>\(\):\-]*)((\s+extends\s+(([a-zA-Z_][a-zA-Z_0-9_<,>\(\):\-]*\.)*[a-zA-Z_][a-zA-Z_0-9_<,>\(\):\-]*))*)(\s*\{|\s*;)/)) {
+        else if (this.currentMethod == null && (matches = hx.match(/^(private\s+)?interface\s+([a-zA-Z_][a-zA-Z_0-9_<,>\(\):\-]*)((\s+extends\s+(([a-zA-Z_][a-zA-Z_0-9_<,>\(\):\-]*\.)*[a-zA-Z_][a-zA-Z_0-9_<,>\(\):\-]*))*)(\s*\{|\s*;)/))) {
             var matchedHx = matches[0];
 
             // Basic info
@@ -269,7 +269,7 @@ HXParser.prototype.parseHaxe = function() {
             i += matchedHx.length;
         }
         // Typedef
-        else if (matches = hx.match(/^(private\s+)?typedef\s+([a-zA-Z_][a-zA-Z_0-9_<,>]*)\s*=\s*(\{|([a-zA-Z_][a-zA-Z0-9_<,>\(\):\-]*)\s*;)/)) {
+        else if (this.currentMethod == null && (matches = hx.match(/^(private\s+)?typedef\s+([a-zA-Z_][a-zA-Z_0-9_<,>]*)\s*=\s*(\{|([a-zA-Z_][a-zA-Z0-9_<,>\(\):\-]*)\s*;)/))) {
             var matchedHx = matches[0];
 
             // Basic info
@@ -317,7 +317,7 @@ HXParser.prototype.parseHaxe = function() {
             i += matchedHx.length;
         }
         // Class
-        else if (matches = hx.match(/^(extern\s+)?(private\s+)?class\s+([a-zA-Z_][a-zA-Z_0-9_]*(?:<[a-zA-Z_0-9_<,>\(\):\-]+>)?)(\s+extends\s+(([a-zA-Z_][a-zA-Z_0-9]*\.)*[a-zA-Z_][a-zA-Z_0-9]*(?:<[a-zA-Z_0-9_<,>\(\):\-]+>)?))?((\s+implements\s+(([a-zA-Z_][a-zA-Z_0-9]*\.)*[a-zA-Z_][a-zA-Z_0-9]*(?:<[a-zA-Z_0-9_<,>\(\):\-]+>)?))*)(\s*\{|\s*;)/)) {
+        else if (this.currentMethod == null && (matches = hx.match(/^(extern\s+)?(private\s+)?class\s+([a-zA-Z_][a-zA-Z_0-9_]*(?:<[a-zA-Z_0-9_<,>\(\):\-]+>)?)(\s+extends\s+(([a-zA-Z_][a-zA-Z_0-9]*\.)*[a-zA-Z_][a-zA-Z_0-9]*(?:<[a-zA-Z_0-9_<,>\(\):\-]+>)?))?((\s+implements\s+(([a-zA-Z_][a-zA-Z_0-9]*\.)*[a-zA-Z_][a-zA-Z_0-9]*(?:<[a-zA-Z_0-9_<,>\(\):\-]+>)?))*)(\s*\{|\s*;)/))) {
             var matchedHx = matches[0];
 
             // Basic info
@@ -380,7 +380,7 @@ HXParser.prototype.parseHaxe = function() {
             i += matchedHx.length;
         }
         // Method
-        else if ((this.currentClass != null || this.currentInterface != null || this.currentTypedef != null) && (matches = hx.match(/^((?:(private|static|public|override|inline|virtual|(?:@:[^\s]+))\s+)*)?function\s+([a-zA-Z_][a-zA-Z0-9_<,>:\-]*)\s*\(([^\)]*)\)(\s*:\s*([a-zA-Z_][a-zA-Z0-9_<,>\-]*))?(\s*\{|\s*;)/))) {
+        else if (this.currentMethod == null && (this.currentClass != null || this.currentInterface != null || this.currentTypedef != null) && (matches = hx.match(/^((?:(private|static|public|override|inline|virtual|(?:@:[^\s]+))\s+)*)?function\s+([a-zA-Z_][a-zA-Z0-9_<,>:\-]*)\s*\(([^\)]*)\)(\s*:\s*([a-zA-Z_][a-zA-Z0-9_<,>\-]*))?(\s*\{|\s*;)/))) {
             var matchedHx = matches[0];
 
             // Basic info
@@ -431,12 +431,14 @@ HXParser.prototype.parseHaxe = function() {
             // Open brace?
             if (matches[7].indexOf('{') != -1) {
                 this.braces++;
+                this.currentMethod = methodInfo.methodName;
+                this.currentMethodBraces = this.braces;
             }
 
             i += matchedHx.length;
         }
         // Property
-        else if ((this.currentClass != null || this.currentInterface != null || this.currentTypedef != null) && (matches = hx.match(/^((?:(private|static|public|override|virtual|inline)\s+)*)?var\s+([a-zA-Z_][a-zA-Z_0-9]*)\s*(\(([^\)]*)\))?(\s*:\s*([a-zA-Z_][a-zA-Z0-9_<,>\-]*))?(\s*=\s*((?:"(?:[^"\\]*(?:\\.[^"\\]*)*)"|'(?:[^']*(?:''[^']*)*)')|(?:[^;]+)))?(\s*;)/))) {
+        else if (this.currentMethod == null && (this.currentClass != null || this.currentInterface != null || this.currentTypedef != null) && (matches = hx.match(/^((?:(private|static|public|override|virtual|inline)\s+)*)?var\s+([a-zA-Z_][a-zA-Z_0-9]*)\s*(\(([^\)]*)\))?(\s*:\s*([a-zA-Z_][a-zA-Z0-9_<,>\-]*))?(\s*=\s*((?:"(?:[^"\\]*(?:\\.[^"\\]*)*)"|'(?:[^']*(?:''[^']*)*)')|(?:[^;]+)))?(\s*;)/))) {
             var matchedHx = matches[0];
 
             // Basic info
@@ -486,7 +488,7 @@ HXParser.prototype.parseHaxe = function() {
             i += matchedHx.length;
         }
         // Enum
-        else if (matches = hx.match(/^(private\s+)?enum\s+([a-zA-Z_][a-zA-Z_0-9_<,>\(\):\-]*)(\s*\{|\s*;)/)) {
+        else if (this.currentMethod == null && (matches = hx.match(/^(private\s+)?enum\s+([a-zA-Z_][a-zA-Z_0-9_<,>\(\):\-]*)(\s*\{|\s*;)/))) {
             var matchedHx = matches[0];
 
             // Basic info
@@ -528,7 +530,7 @@ HXParser.prototype.parseHaxe = function() {
 
             i += matchedHx.length;
         }
-        else if (this.currentEnum != null && (matches = hx.match(/^([a-zA-Z_][a-zA-Z_0-9]*)\s*(\(([^\)]*)\))?(\s*;)/))) {
+        else if (this.currentMethod == null && this.currentEnum != null && (matches = hx.match(/^([a-zA-Z_][a-zA-Z_0-9]*)\s*(\(([^\)]*)\))?(\s*;)/))) {
             var matchedHx = matches[0];
 
             var valueInfo = {
@@ -554,7 +556,11 @@ HXParser.prototype.parseHaxe = function() {
         else if (hx.charAt(0) == '}') {
             // Close brace
             this.braces--;
-            if (this.currentClass != null && this.braces < this.currentClassBraces) {
+            if (this.currentMethod != null && this.braces < this.currentMethodBraces) {
+                this.currentMethod = null;
+                this.currentMethodBraces = 0;
+            }
+            else if (this.currentClass != null && this.braces < this.currentClassBraces) {
                 this.currentClass = null;
                 this.currentClassBraces = 0;
             }
