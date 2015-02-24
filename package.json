@@ -1,6 +1,6 @@
 {
   "name": "hx2dts",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Generate d.ts Typescript definition files from Haxe files",
   "main": "src/hx2dts.js",
   "scripts": {
